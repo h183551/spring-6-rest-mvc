@@ -1,5 +1,6 @@
 package guru.springframework.spring6restmvc.model;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -13,6 +14,7 @@ import java.util.UUID;
  * <p>
  * Created by hasan on 10/26/2024.
  */
+@Builder
 @Data
 public class Beer {
     private UUID id;
