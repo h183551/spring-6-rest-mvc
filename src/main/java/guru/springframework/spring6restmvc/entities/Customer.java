@@ -1,7 +1,9 @@
-package guru.springframework.spring6restmvc.model;
+package guru.springframework.spring6restmvc.entities;
 
-import lombok.Builder;
-import lombok.Data;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Version;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -11,13 +13,21 @@ import java.util.UUID;
  * <p>
  * Description: [Add class description here]
  * <p>
- * Created by hasan on 10/29/2024.
+ * Created by Hasan on 2024-11-14.
  */
+@Getter
+@Setter
 @Builder
-@Data
-public class CustomerDTO {
+@Entity
+@AllArgsConstructor
+@NoArgsConstructor
+public class Customer {
+
+    @Id
     private UUID id;
     private String customerName;
+
+    @Version
     private Integer version;
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
