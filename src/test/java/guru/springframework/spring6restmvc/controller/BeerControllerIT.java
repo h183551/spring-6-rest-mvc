@@ -4,6 +4,8 @@ import guru.springframework.spring6restmvc.entities.Beer;
 import guru.springframework.spring6restmvc.mappers.BeerMapper;
 import guru.springframework.spring6restmvc.model.BeerDTO;
 import guru.springframework.spring6restmvc.repositories.BeerRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,6 +31,37 @@ class BeerControllerIT {
 
     @Autowired
     BeerMapper beerMapper;
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @Test
+    void testPatchByIdNotFound() {
+        assertThrows(NotFoundException.class, () -> {
+            beerController.updateBeerPatchById(UUID.randomUUID(), BeerDTO.builder().build());
+        });
+    }
+
+    @Rollback
+    @Transactional
+    @Test
+    void testPatchById() {
+        Beer beer = beerRepository.findAll().getFirst();
+        final String newBeerName = "PATCHED NAME";
+        BeerDTO beerDTO = BeerDTO.builder()
+                .beerName(newBeerName)
+                .build();
+        final String originalBeerName = beer.getBeerName();
+        final String originalBeerUpc = beer.getUpc();
+        final int originalVersion = beer.getVersion();
+        ResponseEntity responseEntity = beerController.updateBeerPatchById(beer.getId(), beerDTO);
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
+        entityManager.flush();
+        Beer updatedBeer = beerRepository.findById(beer.getId()).get();
+        assertThat(updatedBeer.getBeerName()).isEqualTo(newBeerName);
+        assertThat(updatedBeer.getUpc()).isEqualTo(originalBeerUpc);
+        assertThat(updatedBeer.getVersion()).isEqualTo(originalVersion+1);
+    }
 
     @Test
     void DeleteByIdNotFound() {
@@ -61,19 +95,26 @@ class BeerControllerIT {
     @Test
     void updateExistingBeer() {
         Beer beer = beerRepository.findAll().getFirst();
-        BeerDTO beerDTO = beerMapper.beerToBeerDto(beer);
-        beerDTO.setId(null);
-        beerDTO.setVersion(null);
-        final String beerName = "UPDATED";
-        beerDTO.setBeerName(beerName);
+        //BeerDTO beerDTO = beerMapper.beerToBeerDto(beer);
+        //I tried something else other than copying the values from
+        final String beerName = "UPDATED Using PUT";
+        BeerDTO beerDTO = BeerDTO.builder()
+                .beerName(beerName)
+                .build();
+        //I removed the two lines below because the version is handled automatically I do not want to override it
+        //and also the service do not need the setId because it is passed as parameter
+        //beerDTO.setId(null);
+        //beerDTO.setVersion(null);
 
+        //beerDTO.setBeerName(beerName);
+        final int originalVersion = beer.getVersion();
         ResponseEntity responseEntity = beerController.updateById(beer.getId(), beerDTO);
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
-
+        entityManager.flush();
         Beer updatedBeer = beerRepository.findById(beer.getId()).get();
         assertThat(updatedBeer.getBeerName()).isEqualTo(beerName);
-
-
+        assertThat(updatedBeer.getBeerStyle()).isNull();
+        assertThat(updatedBeer.getVersion()).isEqualTo(originalVersion+1);
     }
 
     @Rollback

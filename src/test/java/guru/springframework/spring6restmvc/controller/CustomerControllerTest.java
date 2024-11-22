@@ -56,6 +56,8 @@ class CustomerControllerTest {
     void testPatchCustomer() throws Exception {
         CustomerDTO customer = customerServiceImpl.listCustomers().getFirst();
 
+        given(customerService.patchCustomerById(any(), any())).willReturn(Optional.of(customer));
+
         Map<String, Object> customerMap = new HashMap<>();
         customerMap.put("customerName", "New Name");
 
