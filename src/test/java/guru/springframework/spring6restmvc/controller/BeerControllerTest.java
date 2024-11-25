@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -104,6 +105,42 @@ class BeerControllerTest {
     }
 
     @Test
+    void testUpdateBeerByIdBlankBeerName() throws Exception {
+
+        BeerDTO beerDTO = beerServiceImpl.listBeers().getFirst();
+        beerDTO.setBeerName("");
+        given(beerService.updateBeerById(any(), any())).willReturn(Optional.of(beerDTO));
+
+        MvcResult mvcResult = mockMvc.perform(put(BeerController.BEER_PATH_ID, beerDTO.getId())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(beerDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.length()", is (1)))
+                .andReturn();
+
+        System.out.println(mvcResult.getResponse().getContentAsString());
+    }
+
+    @Test
+    void testUpdateBeerByIdNullBeerName() throws Exception {
+
+        BeerDTO beerDTO = beerServiceImpl.listBeers().getFirst();
+        beerDTO.setBeerName(null);
+        given(beerService.updateBeerById(any(), any())).willReturn(Optional.of(beerDTO));
+
+        MvcResult mvcResult = mockMvc.perform(put(BeerController.BEER_PATH_ID, beerDTO.getId())
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(beerDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.length()", is (2)))
+                .andReturn();
+
+        System.out.println(mvcResult.getResponse().getContentAsString());
+    }
+
+    @Test
     void testCreateNewBeer() throws Exception {
         BeerDTO beer = beerServiceImpl.listBeers().getFirst();
         beer.setVersion(null);
@@ -132,9 +169,26 @@ class BeerControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(beerDTO)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.length()", is(2)))
-                .andReturn();
+                .andExpect(jsonPath("$.length()", is(6)))
+                        .andReturn();
 
+        System.out.println(mvcResult.getResponse().getContentAsString());
+    }
+
+    @Test
+    void testCreateBeerBlankBeerName() throws Exception {
+
+        BeerDTO beerDTO = BeerDTO.builder().build();
+        beerDTO.setBeerName("");
+        given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerServiceImpl.listBeers().get(1));
+
+        MvcResult mvcResult = mockMvc.perform(post(BeerController.BEER_PATH)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(beerDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.length()", is(5)))
+                        .andReturn();
         System.out.println(mvcResult.getResponse().getContentAsString());
     }
 
