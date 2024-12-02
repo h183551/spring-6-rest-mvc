@@ -80,7 +80,7 @@ class CustomerControllerIT {
     @Rollback
     @Transactional
     @Test
-    void saveNewBeerTest() {
+    void saveNewCustomerTest() {
        CustomerDTO customerDTO = CustomerDTO.builder()
                .name("TEST")
                .build();
