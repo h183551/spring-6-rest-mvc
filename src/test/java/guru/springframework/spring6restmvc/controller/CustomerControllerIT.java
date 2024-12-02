@@ -2,15 +2,11 @@ package guru.springframework.spring6restmvc.controller;
 
 import guru.springframework.spring6restmvc.entities.Customer;
 import guru.springframework.spring6restmvc.mappers.CustomerMapper;
-
 import guru.springframework.spring6restmvc.model.CustomerDTO;
 import guru.springframework.spring6restmvc.repositories.CustomerRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Rollback;
@@ -20,73 +16,43 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 class CustomerControllerIT {
 
     @Autowired
-    CustomerController customerController;
+    CustomerRepository customerRepository;
 
     @Autowired
-    CustomerRepository customerRepository;
+    CustomerController customerController;
 
     @Autowired
     CustomerMapper customerMapper;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
-
-    @Test
-    void testPatchByIdNotFound() {
-        assertThrows(NotFoundException.class, () -> {
-            customerController.updateCustomerPatchById(UUID.randomUUID(), CustomerDTO.builder().build());
-        });
-    }
-
     @Rollback
     @Transactional
     @Test
-    void testPatchById() {
-        Customer customer = customerRepository.findAll().getFirst();
-        final String newCustomerName = "PATCHED NEW NAME";
-        CustomerDTO customerDTO = CustomerDTO.builder()
-                .customerName(newCustomerName)
-                .build();
-        final String originalCustomerName = customer.getCustomerName();
-        final int originalVersion = customer.getVersion();
-        ResponseEntity responseEntity = customerController.updateCustomerPatchById(customer.getId(), customerDTO);
+    void deleteByIdFound() {
+        Customer customer = customerRepository.findAll().get(0);
+
+        ResponseEntity responseEntity = customerController.deleteCustomerById(customer.getId());
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
-        entityManager.flush();
-        Customer updatedCustomer = customerRepository.findById(customer.getId()).get();
-        assertThat(updatedCustomer.getCustomerName()).isEqualTo(newCustomerName);
-        assertThat(updatedCustomer.getVersion()).isEqualTo(originalVersion+1);
-    }
 
-    @Test
-    void testDeleteByIdNotFound() {
-        assertThrows(NotFoundException.class, () -> {
-            customerController.deleteById(UUID.randomUUID());
-        });
-    }
-
-    @Rollback
-    @Transactional
-    @Test
-    void testDeleteByIdFound() {
-        Customer customer = customerRepository.findAll().getFirst();
-
-        ResponseEntity responseEntity = customerController.deleteById(customer.getId());
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.valueOf(204));
         assertThat(customerRepository.findById(customer.getId())).isEmpty();
+    }
 
+    @Test
+    void testDeleteNotFound() {
+        assertThrows(NotFoundException.class, () -> {
+            customerController.deleteCustomerById(UUID.randomUUID());
+        });
     }
 
     @Test
     void testUpdateNotFound() {
         assertThrows(NotFoundException.class, () -> {
-            customerController.updateById(UUID.randomUUID(), CustomerDTO.builder().build());
+            customerController.updateCustomerByID(UUID.randomUUID(), CustomerDTO.builder().build());
         });
     }
 
@@ -100,24 +66,24 @@ class CustomerControllerIT {
         //customerDTO.setVersion(null);
         final String newCustomerName = "UPDATED NAME";
         CustomerDTO customerDTO = CustomerDTO.builder()
-                        .customerName(newCustomerName)
+                        .name(newCustomerName)
                                 .build();
         final int originalVersion = customer.getVersion();
-        ResponseEntity responseEntity = customerController.updateById(customer.getId(), customerDTO);
+        ResponseEntity responseEntity = customerController.updateCustomerByID(customer.getId(), customerDTO);
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
-        entityManager.flush();
+        customerRepository.flush();
         Customer updatedCustomer = customerRepository.findById(customer.getId()).get();
-        assertThat(updatedCustomer.getCustomerName()).isEqualTo(newCustomerName);
+        assertThat(updatedCustomer.getName()).isEqualTo(newCustomerName);
         assertThat(updatedCustomer.getVersion()).isEqualTo(originalVersion+1);
     }
 
     @Rollback
     @Transactional
     @Test
-    void saveNewCustomerTest() {
-        CustomerDTO customerDTO = CustomerDTO.builder()
-                .customerName("New name")
-                .build();
+    void saveNewBeerTest() {
+       CustomerDTO customerDTO = CustomerDTO.builder()
+               .name("TEST")
+               .build();
 
         ResponseEntity responseEntity = customerController.handlePost(customerDTO);
 
@@ -127,39 +93,74 @@ class CustomerControllerIT {
         String[] locationUUID = responseEntity.getHeaders().getLocation().getPath().split("/");
         UUID savedUUID = UUID.fromString(locationUUID[4]);
 
-        assertThat(savedUUID).isNotNull();
+        Customer customer = customerRepository.findById(savedUUID).get();
+        assertThat(customer).isNotNull();
+    }
+
+    @Rollback
+    @Transactional
+    @Test
+    void testListAllEmptyList() {
+        customerRepository.deleteAll();
+        List<CustomerDTO> dtos = customerController.listAllCustomers();
+
+        assertThat(dtos.size()).isEqualTo(0);
     }
 
     @Test
-    void testCustomerNotFound() {
+    void testListAll() {
+        List<CustomerDTO> dtos = customerController.listAllCustomers();
+
+        assertThat(dtos.size()).isEqualTo(3);
+    }
+
+    @Test
+    void testGetByIdNotFound() {
         assertThrows(NotFoundException.class, () -> {
             customerController.getCustomerById(UUID.randomUUID());
         });
     }
 
     @Test
-    void testGetCustomerById() {
-        Customer customer = customerRepository.findAll().getFirst();
-
-        CustomerDTO dto = customerController.getCustomerById(customer.getId());
-
-        assertThat(dto).isNotNull();
+    void testGetById() {
+        Customer customer = customerRepository.findAll().get(0);
+        CustomerDTO customerDTO = customerController.getCustomerById(customer.getId());
+        assertThat(customerDTO).isNotNull();
     }
 
     @Test
-    void testListCustomers() {
-        List<CustomerDTO> dtos = customerController.listCustomers();
-
-        assertThat(dtos.size()).isEqualTo(3);
+    void testPatchByIdNotFound() {
+        assertThrows(NotFoundException.class, () -> {
+            customerController.patchCustomerById(UUID.randomUUID(), CustomerDTO.builder().build());
+        });
     }
 
     @Rollback
     @Transactional
     @Test
-    void testEmptyList() {
-        customerRepository.deleteAll();
-        List<CustomerDTO> dtos = customerController.listCustomers();
-
-        assertThat(dtos.size()).isEqualTo(0);
+    void testPatchById() {
+        Customer customer = customerRepository.findAll().getFirst();
+        final String newCustomerName = "PATCHED NEW NAME";
+        CustomerDTO customerDTO = CustomerDTO.builder()
+                .name(newCustomerName)
+                .build();
+        final String originalCustomerName = customer.getName();
+        final int originalVersion = customer.getVersion();
+        ResponseEntity responseEntity = customerController.patchCustomerById(customer.getId(), customerDTO);
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
+        customerRepository.flush();
+        Customer updatedCustomer = customerRepository.findById(customer.getId()).get();
+        assertThat(updatedCustomer.getName()).isEqualTo(newCustomerName);
+        assertThat(updatedCustomer.getVersion()).isEqualTo(originalVersion+1);
     }
 }
+
+
+
+
+
+
+
+
+
+

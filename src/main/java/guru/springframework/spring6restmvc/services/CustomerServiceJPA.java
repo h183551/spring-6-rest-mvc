@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,22 +29,22 @@ public class CustomerServiceJPA implements CustomerService {
     private final CustomerMapper customerMapper;
 
     @Override
-    public List<CustomerDTO> listCustomers() {
-        return customerRepository.findAll()
-                .stream()
+    public Optional<CustomerDTO> getCustomerById(UUID uuid) {
+        return Optional.ofNullable(customerMapper
+                .customerToCustomerDto(customerRepository.findById(uuid).orElse(null)));
+    }
+
+    @Override
+    public List<CustomerDTO> getAllCustomers() {
+        return customerRepository.findAll().stream()
                 .map(customerMapper::customerToCustomerDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Optional<CustomerDTO> getCustomerById(UUID id) {
-        return Optional.ofNullable(customerMapper.customerToCustomerDto(customerRepository.findById(id)
-                .orElse(null)));
-    }
-
-    @Override
     public CustomerDTO saveNewCustomer(CustomerDTO customer) {
-        return customerMapper.customerToCustomerDto(customerRepository.save(customerMapper.customerDtoToCustomer(customer)));
+        return customerMapper.customerToCustomerDto(customerRepository
+                .save(customerMapper.customerDtoToCustomer(customer)));
     }
 
     @Override
@@ -53,16 +52,9 @@ public class CustomerServiceJPA implements CustomerService {
         AtomicReference<Optional<CustomerDTO>> atomicReference = new AtomicReference<>();
 
         customerRepository.findById(customerId).ifPresentOrElse(foundCustomer -> {
-            foundCustomer.setCustomerName(customer.getCustomerName());
-            atomicReference.set(Optional.of(customerMapper.customerToCustomerDto(customerRepository.save(foundCustomer))));
-        }, () -> {
-            atomicReference.set(Optional.empty());
-        });
-
-        customerRepository.findById(customerId).ifPresentOrElse(foundCustomer -> {
-            foundCustomer.setCustomerName(customer.getCustomerName());
-            foundCustomer.setLastModifiedDate(LocalDateTime.now());
-            atomicReference.set(Optional.of(customerMapper.customerToCustomerDto(customerRepository.save(foundCustomer))));
+            foundCustomer.setName(customer.getName());
+            atomicReference.set(Optional.of(customerMapper
+                    .customerToCustomerDto(customerRepository.save(foundCustomer))));
         }, () -> {
             atomicReference.set(Optional.empty());
         });
@@ -71,8 +63,8 @@ public class CustomerServiceJPA implements CustomerService {
     }
 
     @Override
-    public Boolean deleteById(UUID customerId) {
-        if(customerRepository.existsById(customerId)) {
+    public Boolean deleteCustomerById(UUID customerId) {
+        if(customerRepository.existsById(customerId)){
             customerRepository.deleteById(customerId);
             return true;
         }
@@ -84,14 +76,15 @@ public class CustomerServiceJPA implements CustomerService {
         AtomicReference<Optional<CustomerDTO>> atomicReference = new AtomicReference<>();
 
         customerRepository.findById(customerId).ifPresentOrElse(foundCustomer -> {
-            if(StringUtils.hasText(customer.getCustomerName())){
-                foundCustomer.setCustomerName(customer.getCustomerName());
+            if (StringUtils.hasText(customer.getName())){
+                foundCustomer.setName(customer.getName());
             }
             atomicReference.set(Optional.of(customerMapper
                     .customerToCustomerDto(customerRepository.save(foundCustomer))));
-        },() -> {
+        }, () -> {
             atomicReference.set(Optional.empty());
         });
+
         return atomicReference.get();
     }
 }

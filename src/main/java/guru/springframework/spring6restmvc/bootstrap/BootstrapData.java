@@ -2,9 +2,7 @@ package guru.springframework.spring6restmvc.bootstrap;
 
 import guru.springframework.spring6restmvc.entities.Beer;
 import guru.springframework.spring6restmvc.entities.Customer;
-import guru.springframework.spring6restmvc.model.BeerDTO;
 import guru.springframework.spring6restmvc.model.BeerStyle;
-import guru.springframework.spring6restmvc.model.CustomerDTO;
 import guru.springframework.spring6restmvc.repositories.BeerRepository;
 import guru.springframework.spring6restmvc.repositories.CustomerRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +12,6 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.UUID;
 
 /**
  * Class BootstrapData
@@ -36,7 +33,7 @@ public class BootstrapData implements CommandLineRunner {
     }
 
     private void loadBeerData() {
-        if(beerRepository.count() == 0) {
+        if (beerRepository.count() == 0){
             Beer beer1 = Beer.builder()
                     .beerName("Galaxy Cat")
                     .beerStyle(BeerStyle.PALE_ALE)
@@ -75,28 +72,33 @@ public class BootstrapData implements CommandLineRunner {
     }
 
     private void loadCustomerData() {
-        if(customerRepository.count() == 0) {
+
+        if (customerRepository.count() == 0) {
             Customer customer1 = Customer.builder()
-                    .customerName("Eric Ericsson")
+                    .name("Customer 1")
+                    .version(1)
                     .createdDate(LocalDateTime.now())
-                    .lastModifiedDate(LocalDateTime.now())
+                    .updateDate(LocalDateTime.now())
                     .build();
 
             Customer customer2 = Customer.builder()
-                    .customerName("Johan Johansson")
+                    .name("Customer 2")
+                    .version(1)
                     .createdDate(LocalDateTime.now())
-                    .lastModifiedDate(LocalDateTime.now())
+                    .updateDate(LocalDateTime.now())
                     .build();
 
             Customer customer3 = Customer.builder()
-                    .customerName("Adam Adamson")
+                    .name("Customer 3")
+                    .version(1)
                     .createdDate(LocalDateTime.now())
-                    .lastModifiedDate(LocalDateTime.now())
+                    .updateDate(LocalDateTime.now())
                     .build();
 
             customerRepository.saveAll(Arrays.asList(customer1, customer2, customer3));
         }
 
     }
+
 
 }

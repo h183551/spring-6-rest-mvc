@@ -33,8 +33,8 @@ public class BeerDTO {
     @NotNull
     private BeerStyle beerStyle;
 
-    @NotBlank
     @NotNull
+    @NotBlank
     @Size(max = 255)
     private String upc;
     private Integer quantityOnHand;
@@ -43,4 +43,5 @@ public class BeerDTO {
     private BigDecimal price;
     private LocalDateTime createdDate;
     private LocalDateTime updateDate;
+
 }

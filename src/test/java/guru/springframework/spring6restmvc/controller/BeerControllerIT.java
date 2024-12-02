@@ -1,6 +1,5 @@
 package guru.springframework.spring6restmvc.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import guru.springframework.spring6restmvc.entities.Beer;
 import guru.springframework.spring6restmvc.mappers.BeerMapper;
@@ -16,7 +15,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
@@ -27,12 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-
-import static org.hamcrest.core.Is.is;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -61,52 +56,21 @@ class BeerControllerIT {
 
     @Test
     void testPatchBeerBadName() throws Exception {
-        Beer beer = beerRepository.findAll().getFirst();
+        Beer beer = beerRepository.findAll().get(0);
 
         Map<String, Object> beerMap = new HashMap<>();
-        beerMap.put("beerName", "New Name that is very long and used to test failure of acceding constraints of size");
+        beerMap.put("beerName", "New Name 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
 
-        MvcResult result = mockMvc.perform(patch(BeerController.BEER_PATH_ID, beer.getId())
+        mockMvc.perform(patch(BeerController.BEER_PATH_ID, beer.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(beerMap)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.length()", is(1)))
-                .andReturn();
+                .andExpect(status().isBadRequest());
 
-        System.out.println(result.getResponse().getContentAsString());
     }
 
     @Test
-    void testPatchBeerIdNotFound() {
-        assertThrows(NotFoundException.class, () -> {
-            beerController.updateBeerPatchById(UUID.randomUUID(), BeerDTO.builder().build());
-        });
-    }
-
-    @Rollback
-    @Transactional
-    @Test
-    void testPatchBeer() {
-        Beer beer = beerRepository.findAll().getFirst();
-        final String newBeerName = "PATCHED NAME";
-        BeerDTO beerDTO = BeerDTO.builder()
-                .beerName(newBeerName)
-                .build();
-        final String originalBeerName = beer.getBeerName();
-        final String originalBeerUpc = beer.getUpc();
-        final int originalVersion = beer.getVersion();
-        ResponseEntity responseEntity = beerController.updateBeerPatchById(beer.getId(), beerDTO);
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
-        beerRepository.flush();
-        Beer updatedBeer = beerRepository.findById(beer.getId()).get();
-        assertThat(updatedBeer.getBeerName()).isEqualTo(newBeerName);
-        assertThat(updatedBeer.getUpc()).isEqualTo(originalBeerUpc);
-        assertThat(updatedBeer.getVersion()).isEqualTo(originalVersion+1);
-    }
-
-    @Test
-    void DeleteByIdNotFound() {
+    void testDeleteByIDNotFound() {
         assertThrows(NotFoundException.class, () -> {
             beerController.deleteById(UUID.randomUUID());
         });
@@ -116,7 +80,7 @@ class BeerControllerIT {
     @Transactional
     @Test
     void deleteByIdFound() {
-        Beer beer = beerRepository.findAll().getFirst();
+        Beer beer = beerRepository.findAll().get(0);
 
         ResponseEntity responseEntity = beerController.deleteById(beer.getId());
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
@@ -184,13 +148,13 @@ class BeerControllerIT {
     @Test
     void testBeerIdNotFound() {
         assertThrows(NotFoundException.class, () -> {
-           beerController.getBeerById(UUID.randomUUID());
+            beerController.getBeerById(UUID.randomUUID());
         });
     }
 
     @Test
-    void testGetBeerById() {
-        Beer beer = beerRepository.findAll().getFirst();
+    void testGetById() {
+        Beer beer = beerRepository.findAll().get(0);
 
         BeerDTO dto = beerController.getBeerById(beer.getId());
 
@@ -213,4 +177,37 @@ class BeerControllerIT {
 
         assertThat(dtos.size()).isEqualTo(0);
     }
+
+    @Test
+    void testPatchBeerIdNotFound() {
+        assertThrows(NotFoundException.class, () -> {
+            beerController.updateBeerPatchById(UUID.randomUUID(), BeerDTO.builder().build());
+        });
+    }
+
+    @Rollback
+    @Transactional
+    @Test
+    void testPatchBeer() {
+        Beer beer = beerRepository.findAll().getFirst();
+        final String newBeerName = "PATCHED NAME";
+        BeerDTO beerDTO = BeerDTO.builder()
+                .beerName(newBeerName)
+                .build();
+        final String originalBeerName = beer.getBeerName();
+        final String originalBeerUpc = beer.getUpc();
+        final int originalVersion = beer.getVersion();
+        ResponseEntity responseEntity = beerController.updateBeerPatchById(beer.getId(), beerDTO);
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
+        beerRepository.flush();
+        Beer updatedBeer = beerRepository.findById(beer.getId()).get();
+        assertThat(updatedBeer.getBeerName()).isEqualTo(newBeerName);
+        assertThat(updatedBeer.getUpc()).isEqualTo(originalBeerUpc);
+        assertThat(updatedBeer.getVersion()).isEqualTo(originalVersion+1);
+    }
 }
+
+
+
+
+

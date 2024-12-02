@@ -13,12 +13,12 @@ import java.util.UUID;
  * <p>
  * Created by hasan on 10/29/2024.
  */
-@Builder
 @Data
+@Builder
 public class CustomerDTO {
     private UUID id;
-    private String customerName;
+    private String name;
     private Integer version;
     private LocalDateTime createdDate;
-    private LocalDateTime lastModifiedDate;
+    private LocalDateTime updateDate;
 }

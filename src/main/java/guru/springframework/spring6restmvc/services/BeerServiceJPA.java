@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -57,18 +56,19 @@ public class BeerServiceJPA implements BeerService {
             foundBeer.setBeerStyle(beer.getBeerStyle());
             foundBeer.setUpc(beer.getUpc());
             foundBeer.setPrice(beer.getPrice());
-            foundBeer.setUpdateDate(LocalDateTime.now());
+            foundBeer.setQuantityOnHand(beer.getQuantityOnHand());
             atomicReference.set(Optional.of(beerMapper
                     .beerToBeerDto(beerRepository.save(foundBeer))));
         }, () -> {
             atomicReference.set(Optional.empty());
         });
+
         return atomicReference.get();
     }
 
     @Override
     public Boolean deleteById(UUID beerId) {
-        if(beerRepository.existsById(beerId)) {
+        if (beerRepository.existsById(beerId)) {
             beerRepository.deleteById(beerId);
             return true;
         }

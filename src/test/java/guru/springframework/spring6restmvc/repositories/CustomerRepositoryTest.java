@@ -7,7 +7,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
 @DataJpaTest
 class CustomerRepositoryTest {
 
@@ -16,12 +15,11 @@ class CustomerRepositoryTest {
 
     @Test
     void testSaveCustomer() {
-        Customer savedCustomer = customerRepository.save(Customer.builder()
-                        .customerName("First Customer")
+        Customer customer = customerRepository.save(Customer.builder()
+                        .name("New Name")
                 .build());
 
-        assertThat(savedCustomer.getId()).isNotNull();
-        assertThat(savedCustomer).isNotNull();
-        assertThat(savedCustomer.getId()).isNotNull();
+        assertThat(customer.getId()).isNotNull();
+
     }
 }
