@@ -1,10 +1,11 @@
 services:
   mysql:
     image: 'mysql:latest'
+    container_name: 'spring-6-rest-mvc-mysql-1'
     environment:
-      - 'MYSQL_DATABASE=mydatabase'
-      - 'MYSQL_PASSWORD=secret'
+      - 'MYSQL_DATABASE=restdb'
+      - 'MYSQL_PASSWORD=password'
       - 'MYSQL_ROOT_PASSWORD=verysecret'
-      - 'MYSQL_USER=myuser'
+      - 'MYSQL_USER=restadmin'
     ports:
       - '3306'
