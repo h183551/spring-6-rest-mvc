@@ -112,14 +112,14 @@ public class BeerServiceImpl implements BeerService {
     }
 
     @Override
-    public List<BeerDTO> listBeers(){
+    public List<BeerDTO> listBeers(String beerName){
         return new ArrayList<>(beerMap.values());
     }
 
     @Override
     public Optional<BeerDTO> getBeerById(UUID id) {
 
-        log.debug("Get Beer by Id - in service. Id: " + id.toString());
+        log.debug("Get Beer by Id - in service. Id: {}", id.toString());
 
         return Optional.of(beerMap.get(id));
     }
