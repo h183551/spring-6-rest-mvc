@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface BeerService {
 
-    List<BeerDTO> listBeers(BeerStyle beerStyle, String beerName);
+    List<BeerDTO> listBeers(BeerStyle beerStyle, String beerName, Boolean showInventory);
 
     Optional<BeerDTO> getBeerById(UUID id);
 

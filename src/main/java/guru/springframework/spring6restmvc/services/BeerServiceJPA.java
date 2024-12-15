@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,7 +31,7 @@ public class BeerServiceJPA implements BeerService {
     private final BeerMapper beerMapper;
 
     @Override
-    public List<BeerDTO> listBeers(BeerStyle beerStyle, String beerName) {
+    public List<BeerDTO> listBeers(BeerStyle beerStyle, String beerName, Boolean showInventory) {
 
         List<Beer> beerList;
 
@@ -44,6 +43,10 @@ public class BeerServiceJPA implements BeerService {
             beerList = listBeerByNameAndStyle(beerStyle, beerName);
         } else {
             beerList = beerRepository.findAll();
+        }
+
+        if (showInventory != null && !showInventory) {
+            beerList.forEach(beer -> beer.setQuantityOnHand(null));
         }
 
         return beerList.stream()
